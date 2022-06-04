@@ -49,10 +49,15 @@ export class AuthHttpInterceptor implements HttpInterceptor {
 
     return this.findMatchingRoute(req, config.httpInterceptor).pipe(
       mergeMap((route: ApiRouteDefinition | null) => {
+        // Check if a route was matched
         if (route === null) {
+          // If the URI being called was not found in our httpInterceptor config, simply
+          // pass the request through without attaching a token
           return next.handle(req);
         }
 
+        // If we have a matching route, call getTokenSilently and attach the token to the
+        // outgoing request
         return of((route as HttpInterceptorRouteConfig).tokenOptions).pipe(
           concatMap((options) => {
             return this.getAccessTokenSilently(options).pipe(
@@ -73,7 +78,6 @@ export class AuthHttpInterceptor implements HttpInterceptor {
                   headers: req.headers.set('Authorization', `Bearer ${token}`),
                 })
               : req;
-
             return next.handle(clone);
           })
         );
