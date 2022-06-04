@@ -5,7 +5,7 @@ import {
   HttpEvent,
 } from '@angular/common/http';
 
-import { Observable, from, of, iif, throwError } from 'rxjs';
+import { Observable, from, of, throwError } from 'rxjs';
 import { Inject, Injectable } from '@angular/core';
 
 import {
@@ -20,15 +20,12 @@ import {
   switchMap,
   first,
   concatMap,
-  pluck,
   catchError,
   tap,
-  mergeMap,
 } from 'rxjs/operators';
 import { Auth0Client, GetTokenSilentlyOptions } from '@auth0/auth0-spa-js';
 import { Auth0ClientService } from './auth.client';
 import { AuthState } from './auth.state';
-import { map } from 'cypress/types/bluebird';
 
 @Injectable()
 export class AuthHttpInterceptor implements HttpInterceptor {
@@ -48,7 +45,7 @@ export class AuthHttpInterceptor implements HttpInterceptor {
     }
 
     return this.findMatchingRoute(req, config.httpInterceptor).pipe(
-      mergeMap((route: ApiRouteDefinition | null) => {
+      switchMap((route: ApiRouteDefinition | null) => {
         // Check if a route was matched
         if (route === null) {
           // If the URI being called was not found in our httpInterceptor config, simply
@@ -56,22 +53,17 @@ export class AuthHttpInterceptor implements HttpInterceptor {
           return next.handle(req);
         }
 
-        // If we have a matching route, call getTokenSilently and attach the token to the
-        // outgoing request
-        return of((route as HttpInterceptorRouteConfig).tokenOptions).pipe(
-          concatMap((options) => {
-            return this.getAccessTokenSilently(options).pipe(
-              catchError((err) => {
-                if (this.allowAnonymous(route, err)) {
-                  return of('');
-                }
+        return this.getAccessTokenSilently((route as HttpInterceptorRouteConfig).tokenOptions).pipe(
+          catchError(err => {
+            if (this.allowAnonymous(route, err)) {
+              return of('');
+            }
 
-                this.authState.setError(err);
-                return throwError(err);
-              })
-            );
+            this.authState.setError(err);
+            return throwError(() => err);
           }),
           switchMap((token: string) => {
+            console.log(token)
             // Clone the request and attach the bearer token
             const clone = token
               ? req.clone({
@@ -98,7 +90,7 @@ export class AuthHttpInterceptor implements HttpInterceptor {
       tap((token) => this.authState.setAccessToken(token)),
       catchError((error) => {
         this.authState.refresh();
-        return throwError(error);
+        return throwError(() => error);
       })
     );
   }
@@ -109,11 +101,11 @@ export class AuthHttpInterceptor implements HttpInterceptor {
    */
   private stripQueryFrom(uri: string): string {
     if (uri.indexOf('?') > -1) {
-      uri = uri.substr(0, uri.indexOf('?'));
+      uri = uri.substring(0, uri.indexOf('?'));
     }
 
     if (uri.indexOf('#') > -1) {
-      uri = uri.substr(0, uri.indexOf('#'));
+      uri = uri.substring(0, uri.indexOf('#'));
     }
 
     return uri;

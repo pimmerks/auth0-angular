@@ -4,8 +4,9 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "start:local": "concurrently --raw --kill-others --success first npm:start:local:oidc npm:start:local:playground",
+    "start:local": "concurrently --raw --kill-others --success first npm:start:local:oidc npm:start:local:api npm:start:local:playground",
     "start:local:oidc": "node scripts/oidc-provider",
+    "start:local:api": "node api-server.js",
     "start:local:playground": "ng serve --configuration=local",
     "prebuild": "npm run update-useragent",
     "build": "ng build auth0-angular && npm run build:schematics",
