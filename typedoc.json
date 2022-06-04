@@ -1,5 +1,6 @@
 {
-  "entryPoints": ["./projects/auth0-angular/src/lib"],
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./projects/auth0-angular/src/public-api.ts"],
   "exclude": ["**/*.spec.ts"],
   "tsconfig": "./projects/auth0-angular/tsconfig.lib.json",
   "out": "docs",
