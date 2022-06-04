@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-nested-child-route',
@@ -9,8 +9,6 @@ import { Component, OnInit } from '@angular/core';
   `,
   styles: [],
 })
-export class NestedChildRouteComponent implements OnInit {
+export class NestedChildRouteComponent {
   constructor() {}
-
-  ngOnInit(): void {}
 }
