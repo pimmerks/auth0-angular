@@ -54,7 +54,7 @@ export class AuthHttpInterceptor implements HttpInterceptor {
         }
 
         return of((route as HttpInterceptorRouteConfig).tokenOptions).pipe(
-          concatMap(options => {
+          concatMap((options) => {
             return this.getAccessTokenSilently(options).pipe(
               catchError((err) => {
                 if (this.allowAnonymous(route, err)) {
@@ -70,17 +70,15 @@ export class AuthHttpInterceptor implements HttpInterceptor {
             // Clone the request and attach the bearer token
             const clone = token
               ? req.clone({
-                  headers: req.headers.set(
-                    'Authorization',
-                    `Bearer ${token}`
-                  ),
+                  headers: req.headers.set('Authorization', `Bearer ${token}`),
                 })
               : req;
 
             return next.handle(clone);
           })
         );
-      }));
+      })
+    );
   }
 
   /**
