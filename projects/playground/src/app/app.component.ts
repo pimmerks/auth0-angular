@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { UntypedFormGroup, UntypedFormControl } from '@angular/forms';
+import { FormGroup, FormControl } from '@angular/forms';
 import { AuthService } from 'projects/auth0-angular/src/lib/auth.service';
 import { iif } from 'rxjs';
 import { first } from 'rxjs/operators';
@@ -23,24 +23,24 @@ export class AppComponent implements OnInit {
 
   organization = '';
 
-  loginOptionsForm = new UntypedFormGroup({
-    appStateInput: new UntypedFormControl(''),
-    usePopup: new UntypedFormControl(false),
+  loginOptionsForm = new FormGroup({
+    appStateInput: new FormControl('', { nonNullable: true }),
+    usePopup: new FormControl(false, { nonNullable: true }),
   });
 
-  logoutOptionsForm = new UntypedFormGroup({
-    localOnly: new UntypedFormControl(false),
-    federated: new UntypedFormControl(false),
+  logoutOptionsForm = new FormGroup({
+    localOnly: new FormControl(false, { nonNullable: true }),
+    federated: new FormControl(false, { nonNullable: true }),
   });
 
-  accessTokenOptionsForm = new UntypedFormGroup({
-    usePopup: new UntypedFormControl(false),
-    ignoreCache: new UntypedFormControl(false),
+  accessTokenOptionsForm = new FormGroup({
+    usePopup: new FormControl(false, { nonNullable: true }),
+    ignoreCache: new FormControl(false, { nonNullable: true }),
   });
 
   ngOnInit(): void {
     this.auth.appState$.subscribe((appState) => {
-      this.appStateResult = appState.myValue;
+      this.appStateResult = appState['myValue'];
     });
   }
 

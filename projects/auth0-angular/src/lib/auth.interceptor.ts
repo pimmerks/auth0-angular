@@ -5,7 +5,7 @@ import {
   HttpEvent,
 } from '@angular/common/http';
 
-import { Observable, from, of, iif, throwError } from 'rxjs';
+import { Observable, from, of, throwError } from 'rxjs';
 import { Inject, Injectable } from '@angular/core';
 
 import {
@@ -13,13 +13,13 @@ import {
   isHttpInterceptorRouteConfig,
   AuthClientConfig,
   HttpInterceptorConfig,
+  HttpInterceptorRouteConfig,
 } from './auth.config';
 
 import {
   switchMap,
   first,
   concatMap,
-  pluck,
   catchError,
   tap,
 } from 'rxjs/operators';
@@ -45,47 +45,35 @@ export class AuthHttpInterceptor implements HttpInterceptor {
     }
 
     return this.findMatchingRoute(req, config.httpInterceptor).pipe(
-      concatMap((route) =>
-        iif(
-          // Check if a route was matched
-          () => route !== null,
-          // If we have a matching route, call getTokenSilently and attach the token to the
-          // outgoing request
-          of(route).pipe(
-            pluck('tokenOptions'),
-            concatMap<GetTokenSilentlyOptions, Observable<string>>(
-              (options) => {
-                return this.getAccessTokenSilently(options).pipe(
-                  catchError((err) => {
-                    if (this.allowAnonymous(route, err)) {
-                      return of('');
-                    }
-
-                    this.authState.setError(err);
-                    return throwError(err);
-                  })
-                );
-              }
-            ),
-            switchMap((token: string) => {
-              // Clone the request and attach the bearer token
-              const clone = token
-                ? req.clone({
-                    headers: req.headers.set(
-                      'Authorization',
-                      `Bearer ${token}`
-                    ),
-                  })
-                : req;
-
-              return next.handle(clone);
-            })
-          ),
+      switchMap((route: ApiRouteDefinition | null) => {
+        // Check if a route was matched
+        if (route === null) {
           // If the URI being called was not found in our httpInterceptor config, simply
           // pass the request through without attaching a token
-          next.handle(req)
-        )
-      )
+          return next.handle(req);
+        }
+
+        return this.getAccessTokenSilently((route as HttpInterceptorRouteConfig).tokenOptions).pipe(
+          catchError(err => {
+            if (this.allowAnonymous(route, err)) {
+              return of('');
+            }
+
+            this.authState.setError(err);
+            return throwError(() => err);
+          }),
+          switchMap((token: string) => {
+            console.log(token)
+            // Clone the request and attach the bearer token
+            const clone = token
+              ? req.clone({
+                  headers: req.headers.set('Authorization', `Bearer ${token}`),
+                })
+              : req;
+            return next.handle(clone);
+          })
+        );
+      })
     );
   }
 
@@ -102,7 +90,7 @@ export class AuthHttpInterceptor implements HttpInterceptor {
       tap((token) => this.authState.setAccessToken(token)),
       catchError((error) => {
         this.authState.refresh();
-        return throwError(error);
+        return throwError(() => error);
       })
     );
   }
@@ -113,11 +101,11 @@ export class AuthHttpInterceptor implements HttpInterceptor {
    */
   private stripQueryFrom(uri: string): string {
     if (uri.indexOf('?') > -1) {
-      uri = uri.substr(0, uri.indexOf('?'));
+      uri = uri.substring(0, uri.indexOf('?'));
     }
 
     if (uri.indexOf('#') > -1) {
-      uri = uri.substr(0, uri.indexOf('#'));
+      uri = uri.substring(0, uri.indexOf('#'));
     }
 
     return uri;

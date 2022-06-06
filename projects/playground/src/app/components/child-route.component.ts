@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-child-route',
@@ -11,8 +11,6 @@ import { Component, OnInit } from '@angular/core';
   `,
   styles: [],
 })
-export class ChildRouteComponent implements OnInit {
+export class ChildRouteComponent {
   constructor() {}
-
-  ngOnInit(): void {}
 }

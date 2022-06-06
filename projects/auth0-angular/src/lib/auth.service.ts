@@ -256,7 +256,7 @@ export class AuthService<TAppState extends AppState = AppState>
       catchError((error) => {
         this.authState.setError(error);
         this.authState.refresh();
-        return throwError(error);
+        return throwError(() => error);
       })
     );
   }
@@ -282,7 +282,7 @@ export class AuthService<TAppState extends AppState = AppState>
       catchError((error) => {
         this.authState.setError(error);
         this.authState.refresh();
-        return throwError(error);
+        return throwError(() => error);
       })
     );
   }
